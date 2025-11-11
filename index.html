@@ -3,386 +3,395 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mini Royale - Enhanced UI</title>
+<title>Closh Rayol — Mini Royale (Enhanced UI)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --blue: #3b82f6;
-    --red: #ef4444;
-    --gold: #ffd700;
-    --bg: radial-gradient(circle at 50% 20%, #8cd3ff, #aee3ff 60%, #ccf3ff);
-    --glass: rgba(255,255,255,0.25);
+  :root{
+    --bg1:#8fd1ff; --bg2:#bfefff;
+    --glass: rgba(255,255,255,0.22);
+    --muted:#6b7280; --accent:#3b82f6; --danger:#ef4444; --gold:#ffd700;
   }
-  html, body {
-    margin: 0;
-    font-family: "Poppins", system-ui, sans-serif;
-    background: var(--bg);
-    color: #111;
-    overflow-x: hidden;
-  }
-  #gameContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 12px;
-    min-height: 100vh;
-  }
+  html,body{height:100%;margin:0;font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{background: linear-gradient(180deg,var(--bg1),var(--bg2)); display:flex; align-items:flex-start; justify-content:center; padding:28px;}
+  #app { width:min(1100px,96vw); display:flex; flex-direction:column; gap:12px; align-items:center; }
 
-  /* ---- CANVAS ---- */
-  canvas {
-    width: min(95vw, 960px);
-    height: calc(min(95vw, 960px) * 9 / 16);
-    border-radius: 16px;
-    box-shadow: 0 12px 40px rgba(0,0,0,.25);
-    background: linear-gradient(#cdeeff, #e9f9ff);
-    cursor: crosshair;
+  /* Game stage */
+  .stage {
+    width: 100%; max-width: 960px; border-radius:14px; overflow:hidden;
+    background: linear-gradient(180deg,#eaf9ff, #fff);
+    box-shadow: 0 18px 60px rgba(6,21,56,0.12);
+    position:relative;
   }
+  canvas { display:block; width:100%; height:540px; background:linear-gradient(#dff6ff,#eefcff); }
 
-  /* ---- STATUS BAR ---- */
-  #topHud {
-    position: relative;
-    margin-top: 12px;
-    width: min(95vw, 960px);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--glass);
-    backdrop-filter: blur(8px);
-    border-radius: 12px;
-    padding: 8px 18px;
-    color: #000;
-    font-weight: 600;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  /* HUD (floating) */
+  .hud {
+    position:absolute; left:50%; transform:translateX(-50%); top:14px;
+    width:92%; display:flex; justify-content:space-between; gap:12px;
+    background:var(--glass); padding:10px 16px; border-radius:12px;
+    backdrop-filter: blur(6px); box-shadow: 0 6px 18px rgba(6,21,56,0.08);
   }
-  .crownBox {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .crownBox span {
-    font-size: 1.1em;
-  }
-  .crown {
-    color: var(--gold);
-    text-shadow: 0 0 5px #ff0;
-  }
+  .hud .side { display:flex; align-items:center; gap:10px; font-weight:700; color:#04263a }
+  .crown { font-size:18px; color:var(--gold); text-shadow:0 0 8px #ffd70066; }
+  #matchStatus { font-weight:800; letter-spacing:0.6px; color:#073049; }
 
-  #timer {
-    font-size: 1.2em;
-    font-weight: 700;
-    letter-spacing: 1px;
+  /* Elixir panel */
+  .bottomBar { width:100%; max-width:960px; display:flex; flex-direction:column; gap:10px; align-items:center; }
+  .elixirPanel{
+    width:92%; max-width:960px; background:var(--glass); padding:10px 16px; border-radius:12px;
+    display:flex; justify-content:space-between; align-items:center; backdrop-filter: blur(6px);
+    box-shadow: 0 8px 24px rgba(6,21,56,0.06);
   }
+  .elixirBar { width:360px; height:18px; background:#ffffff40; border-radius:999px; overflow:hidden; position:relative; }
+  .elixirFill { height:100%; background: linear-gradient(90deg,#aef0ff,#49b9ff); width:0%; transition: width 220ms ease; box-shadow: 0 0 10px #49b9ff44; }
+  .elixirValue { font-weight:700; color:#022b3a; min-width:28px; text-align:right; }
 
-  /* ---- ELIXIR BAR ---- */
-  #elixirPanel {
-    position: relative;
-    margin-top: 12px;
-    width: min(95vw, 960px);
-    background: var(--glass);
-    border-radius: 12px;
-    padding: 10px 18px;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .elixirBar {
-    position: relative;
-    width: 220px;
-    height: 18px;
-    background: #ffffff40;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .elixirFill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #b0f0ff, #5fc8ff);
-    border-radius: 10px;
-    transition: width 0.25s;
-    box-shadow: 0 0 8px #6bdcff;
-  }
-
-  /* ---- CARDS ---- */
-  #cardDock {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 14px;
-    flex-wrap: wrap;
-    width: min(95vw, 960px);
-  }
+  /* Card dock */
+  #cardDock { width:92%; max-width:960px; display:flex; justify-content:center; gap:12px; padding:12px 6px; flex-wrap:wrap; }
   .card {
-    width: 72px;
-    height: 96px;
-    background: rgba(255,255,255,0.4);
-    border-radius: 10px;
-    border: 2px solid rgba(255,255,255,0.7);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-weight: 600;
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
+    width:80px; height:110px; border-radius:10px; background:linear-gradient(180deg,#ffffffbf,#ffffffa0);
+    box-shadow: 0 8px 20px rgba(4,8,20,0.08); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative; cursor:pointer; transition:transform .16s ease, box-shadow .16s ease;
+    user-select:none;
   }
-  .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-  }
-  .card.active {
-    outline: 3px solid var(--blue);
-    box-shadow: 0 0 14px #3b82f6aa;
-  }
-  .cost {
-    background: var(--blue);
-    color: white;
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8em;
-    position: absolute;
-    bottom: 6px;
-    right: 6px;
+  .card:hover { transform: translateY(-6px); box-shadow: 0 14px 30px rgba(4,8,20,0.12); }
+  .card.active { outline:3px solid rgba(59,130,246,0.22); box-shadow:0 18px 40px rgba(59,130,246,0.08); transform:translateY(-8px); }
+  .card .title { font-weight:700; text-transform:capitalize; color:#042a3b; }
+  .card .desc { font-size:12px; color:var(--muted); margin-top:6px;}
+  .card .cost{
+    position:absolute; right:8px; bottom:8px; background:var(--accent); color:#fff; width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-weight:800; box-shadow: 0 6px 14px rgba(59,130,246,0.18);
   }
 
-  /* ---- TOAST ---- */
-  #toast {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.75);
-    color: white;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 0.9em;
-    opacity: 0;
-    transition: opacity 0.4s;
-  }
+  /* Controls row */
+  .controls { display:flex; gap:8px; align-items:center; margin-top:6px; }
+  .btn { padding:8px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+  .btn.primary { background:var(--accent); color:white; box-shadow:0 10px 26px rgba(59,130,246,0.18); }
+  .btn.ghost { background:transparent; color:#053045; border:1px solid rgba(0,0,0,0.06); }
 
-  #restart {
-    margin-top: 14px;
-    padding: 8px 16px;
-    background: var(--blue);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(59,130,246,0.4);
-    transition: transform 0.2s;
-  }
-  #restart:hover {
-    transform: scale(1.05);
+  /* Toast */
+  #toast { position:absolute; left:50%; transform:translateX(-50%); bottom:12px; background:rgba(2,22,38,0.88); color:white; padding:8px 12px; border-radius:8px; opacity:0; transition:opacity .28s; }
+
+  /* Responsive */
+  @media (max-width:720px){
+    canvas { height: (540px * 0.7); }
+    .elixirBar { width:220px; }
+    .card { width:68px; height:96px; }
   }
 </style>
 </head>
 <body>
-<div id="gameContainer">
-  <canvas id="canvas" width="960" height="540"></canvas>
-  <div id="toast"></div>
+  <div id="app">
+    <div class="stage" id="stageWrap">
+      <canvas id="gameCanvas" width="960" height="540"></canvas>
 
-  <div id="topHud">
-    <div class="crownBox">
-      <span class="crown">👑</span> <span id="playerCrowns">0</span>
+      <div class="hud" aria-hidden="false">
+        <div class="side"><span class="crown">👑</span> <span id="playerCrowns">0</span></div>
+        <div id="matchStatus">VS AI · 02:00</div>
+        <div class="side"><span id="opponentCrowns">0</span> <span class="crown">👑</span></div>
+      </div>
+
+      <div id="toast"></div>
     </div>
-    <div id="timer">02:00</div>
-    <div class="crownBox">
-      <span id="opponentCrowns">0</span> <span class="crown">👑</span>
+
+    <div class="bottomBar">
+      <div class="elixirPanel">
+        <div class="elixirBar"><div class="elixirFill" id="elixirFill"></div></div>
+        <div class="elixirValue" id="elixirValue">5</div>
+      </div>
+
+      <div id="cardDock" aria-label="Card dock"></div>
+
+      <div class="controls">
+        <button class="btn ghost" id="spectateBtn">Spectate</button>
+        <button class="btn primary" id="restartBtn">Restart Match</button>
+      </div>
     </div>
   </div>
-
-  <div id="elixirPanel">
-    <div class="elixirBar"><div class="elixirFill" id="elixirFill"></div></div>
-    <div id="elixirCount">5</div>
-  </div>
-
-  <div id="cardDock"></div>
-
-  <button id="restart">Restart Match</button>
-</div>
 
 <script>
-// --- GAME LOGIC (simplified from previous version, focus on visuals) ---
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+/* ====== Enhanced UI + Game logic (drop-in replacement) ======
+   - Modern HUD, animated elixir bar, improved cards
+   - Self-contained; drop into repo root or public/.
+   - If your repo splits logic into modules, adapt the game logic section.
+*/
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 
 const CARD_DEFS = {
-  knight: {cost:3,hp:120,atk:25,range:20,speed:40,type:'melee',color:'#7b3'},
-  archer: {cost:3,hp:70,atk:18,range:120,speed:55,type:'ranged',color:'#39f',attackCooldown:1.2},
-  bomber: {cost:4,hp:80,atk:55,range:20,speed:36,type:'splash',radius:45,color:'#f59'},
-  fireball: {cost:4,type:'spell',radius:50,damage:80,color:'#ff8a65'}
+  knight: {cost:3,hp:140,atk:28,range:18,speed:42,type:'melee',color:'#3fb764'},
+  archer: {cost:3,hp:80,atk:18,range:120,speed:58,type:'ranged',color:'#2f7bd9',attackCooldown:1.1},
+  bomber: {cost:4,hp:90,atk:52,range:16,speed:36,type:'splash',radius:46,color:'#ff6b6b'},
+  fireball: {cost:4,type:'spell',radius:56,damage:92,color:'#ff8a65'}
 };
 
-let state;
-function init(){
+let state = null;
+function resetState(){
   state = {
-    running:true,timeLeft:120,
-    player:{elixir:5,crowns:0},
-    opponent:{elixir:5,crowns:0},
-    units:[],towers:[],projectiles:[],
-    selected:null,toast:0,last:performance.now()
+    running:true, timeLeft:120, last: performance.now(),
+    player:{elixir:5,crowns:0}, opponent:{elixir:5,crowns:0},
+    units:[], towers:[], projectiles:[], selected:null, toastTimer:0
   };
-  const tHP=400;
-  [
-    {x:220,y:420,side:'player'},{x:480,y:380,side:'player',king:true},{x:740,y:420,side:'player'},
-    {x:220,y:120,side:'opponent'},{x:480,y:160,side:'opponent',king:true},{x:740,y:120,side:'opponent'}
-  ].forEach(p=>{
-    state.towers.push({x:p.x,y:p.y,hp:p.king?tHP*1.5:tHP,side:p.side,king:p.king,range:140,atk:20,atkTimer:0});
-  });
-  setupUI();
-}
-function setupUI(){
-  const dock=document.getElementById("cardDock");
-  dock.innerHTML="";
-  Object.keys(CARD_DEFS).forEach(id=>{
-    const card=document.createElement("div");
-    card.className="card";
-    card.innerHTML=`<div>${id}</div><div class="cost">${CARD_DEFS[id].cost}</div>`;
-    card.onclick=()=>{
-      state.selected = (state.selected===id)?null:id;
-      document.querySelectorAll(".card").forEach(c=>c.classList.remove("active"));
-      if(state.selected) card.classList.add("active");
-    };
-    dock.appendChild(card);
-  });
-}
-canvas.addEventListener("click",e=>{
-  if(!state.selected) return;
-  const rect=canvas.getBoundingClientRect();
-  const x=(e.clientX-rect.left)*canvas.width/rect.width;
-  const y=(e.clientY-rect.top)*canvas.height/rect.height;
-  if(y<H/2){showToast("Place on your side only");return;}
-  const def=CARD_DEFS[state.selected];
-  if(state.player.elixir<def.cost){showToast("Not enough elixir");return;}
-  if(def.type==="spell"){
-    state.projectiles.push({x,y,r:def.radius,damage:def.damage,life:0.5,owner:'player',color:def.color});
-  }else{
-    state.units.push({x,y,hp:def.hp,atk:def.atk,range:def.range,speed:def.speed,side:'player',color:def.color,atkTimer:0,cd:def.attackCooldown||1});
-  }
-  state.player.elixir-=def.cost;
-  state.selected=null;
-  document.querySelectorAll(".card").forEach(c=>c.classList.remove("active"));
-});
-
-function showToast(msg){
-  const toast=document.getElementById("toast");
-  toast.textContent=msg;
-  toast.style.opacity=1;
-  clearTimeout(toast._hide);
-  toast._hide=setTimeout(()=>toast.style.opacity=0,1500);
-}
-
-function tick(dt){
-  if(!state.running) return;
-  state.timeLeft-=dt;
-  state.player.elixir=Math.min(10,state.player.elixir+dt*0.7);
-  state.opponent.elixir=Math.min(10,state.opponent.elixir+dt*0.7);
-
-  // AI simple spawn
-  if(!state.ai) state.ai={t:0};
-  state.ai.t-=dt;
-  if(state.ai.t<=0){
-    const ids=Object.keys(CARD_DEFS);
-    const id=ids[Math.floor(Math.random()*ids.length)];
-    const def=CARD_DEFS[id];
-    if(def.cost<=state.opponent.elixir){
-      state.opponent.elixir-=def.cost;
-      if(def.type==='spell'){
-        const tx=220+Math.random()*500,ty=350+Math.random()*80;
-        state.projectiles.push({x:tx,y:ty,r:def.radius,damage:def.damage,life:0.5,owner:'opponent',color:def.color});
-      }else{
-        const x=120+Math.random()*(W-240),y=80+Math.random()*60;
-        state.units.push({x,y,hp:def.hp,atk:def.atk,range:def.range,speed:def.speed,side:'opponent',color:def.color,atkTimer:0,cd:def.attackCooldown||1});
-      }
-    }
-    state.ai.t=1+Math.random()*1.5;
-  }
-
-  // simple combat
-  state.units.forEach(u=>{
-    u.atkTimer-=dt;
-    const enemies=state.units.filter(e=>e.side!==u.side);
-    let t=enemies[0];
-    if(t){
-      const dx=t.x-u.x,dy=t.y-u.y,d=Math.hypot(dx,dy);
-      if(d<(u.range||20)){
-        if(u.atkTimer<=0){t.hp-=u.atk;u.atkTimer=u.cd;}
-      }else{
-        u.x+=dx/d*u.speed*dt*(u.side==='player'?1:-1);
-        u.y+=dy/d*u.speed*dt*(u.side==='player'?1:-1);
-      }
-    }
-  });
-  state.units=state.units.filter(u=>u.hp>0);
-
-  // spells
-  state.projectiles.forEach(p=>{
-    p.life-=dt;
-    if(p.life<=0){
-      state.units.forEach(u=>{
-        if(u.side!==(p.owner) && Math.hypot(u.x-p.x,u.y-p.y)<p.r) u.hp-=p.damage;
-      });
-    }
-  });
-  state.projectiles=state.projectiles.filter(p=>p.life>0);
+  // towers (3 per side)
+  const baseHP = 420;
+  const positions = [
+    {x:200,y:430,side:'player'},{x:480,y:390,side:'player',king:true},{x:760,y:430,side:'player'},
+    {x:200,y:110,side:'opponent'},{x:480,y:150,side:'opponent',king:true},{x:760,y:110,side:'opponent'}
+  ];
+  positions.forEach(p => state.towers.push({
+    x:p.x,y:p.y,hp:p.king?baseHP*1.5:baseHP,side:p.side,king:!!p.king,range:150,atk:22,atkTimer:0
+  }));
+  prepareDeckUI();
   updateUI();
 }
 
-function updateUI(){
-  document.getElementById("elixirFill").style.width=`${(state.player.elixir/10)*100}%`;
-  document.getElementById("elixirCount").textContent=Math.floor(state.player.elixir);
-  document.getElementById("playerCrowns").textContent=state.player.crowns;
-  document.getElementById("opponentCrowns").textContent=state.opponent.crowns;
-  const m=Math.floor(state.timeLeft/60),s=Math.floor(state.timeLeft%60);
-  document.getElementById("timer").textContent=`${m}:${s.toString().padStart(2,'0')}`;
+function prepareDeckUI(){
+  const dock = document.getElementById('cardDock'); dock.innerHTML='';
+  Object.keys(CARD_DEFS).forEach(id=>{
+    const def = CARD_DEFS[id];
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.dataset.card = id;
+    el.innerHTML = `<div class="title">${id}</div><div class="desc">${def.type==='spell'?'Spell':'Troop'}</div><div class="cost">${def.cost}</div>`;
+    el.onclick = ()=> {
+      if(state.selected === id){ state.selected = null; el.classList.remove('active'); }
+      else {
+        document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+        state.selected = id; el.classList.add('active');
+      }
+    };
+    dock.appendChild(el);
+  });
 }
 
+// canvas click: place selected card (player bottom half)
+canvas.addEventListener('click', (ev)=>{
+  if(!state.selected) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+  const x = (ev.clientX - rect.left) * scaleX;
+  const y = (ev.clientY - rect.top) * scaleY;
+  if(y < H/2){ showToast('Place on your side (bottom)'); return; }
+  const def = CARD_DEFS[state.selected];
+  if(state.player.elixir < def.cost){ showToast('Not enough elixir'); return; }
+
+  if(def.type === 'spell'){
+    state.projectiles.push({x,y,r:def.radius,damage:def.damage,life:0.6,owner:'player',color:def.color});
+  } else {
+    state.units.push({
+      id: Math.random().toString(36).slice(2,8),
+      x,y,hp:def.hp,atk:def.atk||0,range:def.range||20,speed:def.speed,w:18,h:20,color:def.color,side:'player',atkTimer:0,attackCooldown:def.attackCooldown||1
+    });
+  }
+  state.player.elixir -= def.cost;
+  state.selected = null;
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+  updateUI();
+});
+
+// small toast
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.opacity = 1;
+  state.toastTimer = 2.0;
+}
+
+// UI updates
+function updateUI(){
+  document.getElementById('elixirFill').style.width = `${(state.player.elixir/10)*100}%`;
+  document.getElementById('elixirValue').textContent = Math.floor(state.player.elixir);
+  document.getElementById('playerCrowns').textContent = state.player.crowns;
+  document.getElementById('opponentCrowns').textContent = state.opponent.crowns;
+  const m = Math.floor(state.timeLeft/60), s = Math.floor(state.timeLeft%60);
+  document.getElementById('matchStatus').textContent = `VS AI · ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// Game tick / AI / combat
+function tick(dt){
+  if(!state.running) return;
+  state.timeLeft = Math.max(0, state.timeLeft - dt);
+  state._elixirAcc = (state._elixirAcc || 0) + dt;
+  while(state._elixirAcc >= 1.0){
+    state.player.elixir = Math.min(10, state.player.elixir + 1);
+    state.opponent.elixir = Math.min(10, state.opponent.elixir + 1);
+    state._elixirAcc -= 1.0;
+  }
+
+  // AI simple behavior
+  state._ai = state._ai || {timer:0};
+  state._ai.timer -= dt;
+  if(state._ai.timer <= 0){
+    const playable = Object.keys(CARD_DEFS).filter(id=>CARD_DEFS[id].cost <= state.opponent.elixir);
+    if(playable.length){
+      const id = playable[Math.floor(Math.random()*playable.length)];
+      const def = CARD_DEFS[id];
+      if(def.type === 'spell'){
+        // target random bottom tower
+        const targets = state.towers.filter(t=>t.side==='player');
+        const t = targets[Math.floor(Math.random()*targets.length)];
+        state.projectiles.push({x:t.x + (Math.random()*40-20), y:t.y + (Math.random()*40-20), r:def.radius, damage:def.damage, life:0.6, owner:'opponent', color:def.color});
+        state.opponent.elixir -= def.cost;
+      } else {
+        const sx = 120 + Math.random()*(W-240), sy = 60 + Math.random()*60;
+        state.units.push({id:Math.random().toString(36).slice(2,8), x:sx,y:sy,hp:def.hp,atk:def.atk,range:def.range,speed:def.speed,w:18,h:20,color:def.color,side:'opponent',atkTimer:0,attackCooldown:def.attackCooldown||1});
+        state.opponent.elixir -= def.cost;
+      }
+    }
+    state._ai.timer = 0.9 + Math.random()*1.6;
+  }
+
+  // units update: movement and attack
+  for(const u of state.units){
+    u.atkTimer = (u.atkTimer || 0) - dt;
+    const enemies = state.units.filter(x => x.side !== u.side);
+    let target = enemies.find(e => Math.hypot(e.x-u.x, e.y-u.y) <= (u.range || 20) + Math.max(e.w||10,e.h||10)/2);
+    if(!target){
+      const towers = state.towers.filter(t => t.side !== u.side);
+      if(towers.length) target = towers.reduce((a,b)=> (Math.hypot(a.x-u.x,a.y-u.y) < Math.hypot(b.x-u.x,b.y-u.y) ? a : b));
+    }
+    if(target){
+      const d = Math.hypot(target.x-u.x, target.y-u.y);
+      if(d <= (u.range||20) + 8){
+        if(u.atkTimer <= 0){ target.hp -= u.atk || 0; u.atkTimer = u.attackCooldown || 1; }
+      } else {
+        const dx = (target.x-u.x), dy=(target.y-u.y), mag = Math.hypot(dx,dy) || 1;
+        u.x += (dx/mag) * u.speed * dt;
+        u.y += (dy/mag) * u.speed * dt;
+      }
+    } else {
+      u.y += (u.side === 'player') ? -u.speed*dt : u.speed*dt;
+    }
+  }
+
+  // tower attacks
+  for(const t of state.towers){
+    t.atkTimer -= dt;
+    if(t.atkTimer <= 0){
+      const enemies = state.units.filter(u=>u.side !== t.side);
+      if(enemies.length){
+        const target = enemies.reduce((a,b)=> (Math.hypot(a.x-t.x,a.y-t.y) < Math.hypot(b.x-t.x,b.y-t.y) ? a : b));
+        if(Math.hypot(target.x-t.x,target.y-t.y) <= t.range + 10){ target.hp -= t.atk; t.atkTimer = 1.0; }
+      }
+    }
+  }
+
+  // projectile (spell) resolution: area damage when life ends
+  for(const p of state.projectiles){
+    p.life -= dt;
+    if(p.life <= 0){
+      for(const u of state.units){
+        if(u.side !== (p.owner === 'player' ? 'opponent' : 'player')){
+          if(Math.hypot(u.x-p.x,u.y-p.y) <= p.r + 8) u.hp -= p.damage;
+        }
+      }
+      for(const t of state.towers){
+        if(t.side !== (p.owner === 'player' ? 'opponent' : 'player')){
+          if(Math.hypot(t.x-p.x,t.y-p.y) <= p.r + 20) t.hp -= p.damage;
+        }
+      }
+    }
+  }
+
+  state.units = state.units.filter(u => u.hp > 0);
+  const removed = [];
+  state.towers = state.towers.filter(t => {
+    if(t.hp <= 0){ removed.push(t); return false; }
+    return true;
+  });
+  for(const t of removed){
+    if(t.side === 'opponent') state.player.crowns += (t.king?3:1);
+    else state.opponent.crowns += (t.king?3:1);
+    showToast(`${t.side==='opponent' ? 'You' : 'Opponent'} destroyed a ${t.king?'King ':''}tower!`);
+  }
+
+  // win/lose by king tower destruction
+  if(state.towers.filter(t=>t.side==='opponent' && t.king).length === 0){ endMatch('win'); }
+  else if(state.towers.filter(t=>t.side==='player' && t.king).length === 0){ endMatch('lose'); }
+  else if(state.timeLeft <= 0) finishMatch();
+
+  if(state.toastTimer > 0){
+    state.toastTimer = Math.max(0, state.toastTimer - dt);
+    if(state.toastTimer === 0) document.getElementById('toast').style.opacity = 0;
+  }
+  updateUI();
+}
+
+function finishMatch(){
+  state.running = false;
+  if(state.player.crowns > state.opponent.crowns) endMatch('win');
+  else if(state.player.crowns < state.opponent.crowns) endMatch('lose');
+  else endMatch('draw');
+}
+
+function endMatch(result){
+  state.running = false;
+  if(result === 'win') showToast('Victory! 🎉');
+  else if(result === 'lose') showToast('Defeat...');
+  else showToast('Draw');
+  document.getElementById('matchStatus').textContent = `Match over · ${result.toUpperCase()}`;
+}
+
+// rendering
 function render(){
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle="#b5eaff";
-  ctx.fillRect(0,H*0.25-10,W,H*0.5+20);
-  ctx.strokeStyle="#ffffff99";
-  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  // arena
+  ctx.fillStyle = '#deffff'; ctx.fillRect(0,H*0.25-12,W,H*0.5+24);
+  // center line
+  ctx.strokeStyle = '#ffffff88'; ctx.lineWidth=2; ctx.setLineDash([6,8]);
+  ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke(); ctx.setLineDash([]);
 
   // towers
-  state.towers.forEach(t=>{
-    ctx.fillStyle=t.side==='player'? 'rgba(59,130,246,0.9)':'rgba(239,68,68,0.9)';
-    ctx.fillRect(t.x-20,t.y-20,40,40);
-    if(t.king){ctx.fillStyle='#ffd700';ctx.beginPath();ctx.moveTo(t.x-8,t.y-20);ctx.lineTo(t.x,t.y-30);ctx.lineTo(t.x+8,t.y-20);ctx.fill();}
-  });
+  for(const t of state.towers){
+    ctx.save(); ctx.translate(t.x,t.y);
+    ctx.fillStyle = t.side === 'player' ? 'rgba(59,130,246,0.95)' : 'rgba(239,68,68,0.95)';
+    ctx.fillRect(-22,-28,44,56);
+    if(t.king){ ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.moveTo(-12,-28); ctx.lineTo(0,-40); ctx.lineTo(12,-28); ctx.fill(); }
+    // hp bar
+    ctx.fillStyle = '#00000033'; ctx.fillRect(-34,34,68,8);
+    const maxhp = t.king ? 630 : 420;
+    ctx.fillStyle = '#74f5a4'; ctx.fillRect(-34,34,68*Math.max(0,Math.min(1,t.hp/maxhp)),8);
+    ctx.restore();
+  }
 
   // units
-  state.units.forEach(u=>{
-    ctx.fillStyle=u.color;
-    ctx.beginPath();ctx.arc(u.x,u.y,10,0,Math.PI*2);ctx.fill();
-  });
+  for(const u of state.units){
+    ctx.save(); ctx.translate(u.x,u.y);
+    ctx.fillStyle = u.color; ctx.beginPath(); ctx.ellipse(0,0,u.w,u.h,0,0,Math.PI*2); ctx.fill();
+    // hp bar
+    ctx.fillStyle = '#00000022'; ctx.fillRect(-u.w-6, u.h+6, u.w*2+12,6);
+    ctx.fillStyle = '#86ffb8'; ctx.fillRect(-u.w-6, u.h+6, (u.w*2+12) * Math.max(0,Math.min(1,u.hp/(CARD_DEFS[u.type]?.hp || 100))),6);
+    ctx.restore();
+  }
 
-  // projectiles
-  state.projectiles.forEach(p=>{
-    ctx.globalAlpha=Math.max(0.3,p.life/0.5);
-    ctx.fillStyle=p.color;
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
-    ctx.globalAlpha=1;
-  });
+  // spells/projectiles
+  for(const p of state.projectiles){
+    ctx.globalAlpha = Math.max(0.25, p.life/0.6);
+    ctx.fillStyle = p.color || '#ffbb66';
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // footer hint
+  ctx.fillStyle = '#06304988'; ctx.font = '14px Poppins, sans-serif';
+  ctx.fillText('Click a card then click on your half (bottom) to deploy. AI opponent plays automatically.', 12, H - 10);
 }
 
-function loop(t){
-  const dt=Math.min(0.05,(t-state.last)/1000);
-  state.last=t;
-  tick(dt);render();
+let lastRAF = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now - (state.last||now))/1000);
+  state.last = now;
+  tick(dt);
+  render();
   requestAnimationFrame(loop);
 }
 
-document.getElementById("restart").onclick=()=>init();
-init();
+document.getElementById('restartBtn').addEventListener('click', ()=> resetState());
+document.getElementById('spectateBtn').addEventListener('click', ()=> showToast('Spectate not implemented (local demo)'));
+
+resetState();
 requestAnimationFrame(loop);
 </script>
 </body>
