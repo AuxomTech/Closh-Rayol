@@ -3,493 +3,386 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mini Royale — Browser Clone</title>
+<title>Mini Royale - Enhanced UI</title>
 <style>
-  :root{
-    --bg:#87ceeb;
-    --arena:#d0f0ff;
-    --player:#3b82f6;
-    --opponent:#ef4444;
-    --card-bg:#ffffffdd;
-    --ui:#111827;
+  :root {
+    --blue: #3b82f6;
+    --red: #ef4444;
+    --gold: #ffd700;
+    --bg: radial-gradient(circle at 50% 20%, #8cd3ff, #aee3ff 60%, #ccf3ff);
+    --glass: rgba(255,255,255,0.25);
   }
-  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
-  #container{display:flex;flex-direction:column;align-items:center;padding:8px;background:var(--bg);min-height:100%}
-  #gameWrap{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.25)}
-  canvas{display:block;background:linear-gradient(#cdeeff, #e9f9ff);width:960px;height:540px}
-  #ui{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--card-bg);width:960px;border-bottom-left-radius:8px;border-bottom-right-radius:8px;box-sizing:border-box}
-  .leftInfo,.rightInfo{display:flex;gap:12px;align-items:center}
-  .elixirBar{width:200px;height:18px;background:#eee;border-radius:10px;overflow:hidden;position:relative}
-  .elixirFill{height:100%;background:linear-gradient(#9ee7ff,#66c2ff);width:0%}
-  .cardDock{display:flex;gap:8px}
-  .card{width:64px;height:90px;background:var(--card-bg);border-radius:8px;border:1px solid #ddd;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:600;cursor:pointer;user-select:none}
-  .card.cooldown{opacity:.45}
-  #topInfo{display:flex;justify-content:center;gap:24px;padding:6px 0;color:var(--ui);font-weight:600}
-  button{padding:6px 10px;border-radius:6px;border:1px solid #ccc;background:white;cursor:pointer}
-  #toast{position:absolute;left:50%;transform:translateX(-50%);top:10px;background:#0008;color:white;padding:6px 12px;border-radius:6px;display:none}
-  @media (max-width:1000px){
-    canvas{width:100%;height:56vw}
-    #ui{width:100%}
+  html, body {
+    margin: 0;
+    font-family: "Poppins", system-ui, sans-serif;
+    background: var(--bg);
+    color: #111;
+    overflow-x: hidden;
+  }
+  #gameContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    min-height: 100vh;
+  }
+
+  /* ---- CANVAS ---- */
+  canvas {
+    width: min(95vw, 960px);
+    height: calc(min(95vw, 960px) * 9 / 16);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.25);
+    background: linear-gradient(#cdeeff, #e9f9ff);
+    cursor: crosshair;
+  }
+
+  /* ---- STATUS BAR ---- */
+  #topHud {
+    position: relative;
+    margin-top: 12px;
+    width: min(95vw, 960px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--glass);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    padding: 8px 18px;
+    color: #000;
+    font-weight: 600;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+  .crownBox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .crownBox span {
+    font-size: 1.1em;
+  }
+  .crown {
+    color: var(--gold);
+    text-shadow: 0 0 5px #ff0;
+  }
+
+  #timer {
+    font-size: 1.2em;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  /* ---- ELIXIR BAR ---- */
+  #elixirPanel {
+    position: relative;
+    margin-top: 12px;
+    width: min(95vw, 960px);
+    background: var(--glass);
+    border-radius: 12px;
+    padding: 10px 18px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .elixirBar {
+    position: relative;
+    width: 220px;
+    height: 18px;
+    background: #ffffff40;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .elixirFill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #b0f0ff, #5fc8ff);
+    border-radius: 10px;
+    transition: width 0.25s;
+    box-shadow: 0 0 8px #6bdcff;
+  }
+
+  /* ---- CARDS ---- */
+  #cardDock {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    width: min(95vw, 960px);
+  }
+  .card {
+    width: 72px;
+    height: 96px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,0.7);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  }
+  .card.active {
+    outline: 3px solid var(--blue);
+    box-shadow: 0 0 14px #3b82f6aa;
+  }
+  .cost {
+    background: var(--blue);
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+  }
+
+  /* ---- TOAST ---- */
+  #toast {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  #restart {
+    margin-top: 14px;
+    padding: 8px 16px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+    transition: transform 0.2s;
+  }
+  #restart:hover {
+    transform: scale(1.05);
   }
 </style>
 </head>
 <body>
-<div id="container">
-  <h2>Mini Royale — playable browser remake</h2>
-  <div id="gameWrap">
-    <canvas id="c" width="960" height="540"></canvas>
-    <div id="toast"></div>
-  </div>
+<div id="gameContainer">
+  <canvas id="canvas" width="960" height="540"></canvas>
+  <div id="toast"></div>
 
-  <div id="ui">
-    <div class="leftInfo">
-      <div>
-        <div style="font-size:12px;color:#444">Player</div>
-        <div id="playerCrowns">Crowns: 0</div>
-      </div>
-      <div class="elixirBar" title="Elixir">
-        <div class="elixirFill" id="elixirFill"></div>
-      </div>
-      <div id="elixirCount" style="font-weight:700">0</div>
+  <div id="topHud">
+    <div class="crownBox">
+      <span class="crown">👑</span> <span id="playerCrowns">0</span>
     </div>
-
-    <div id="topInfo">
-      <div id="timer">02:00</div>
-      <div id="status">VS AI</div>
-    </div>
-
-    <div class="rightInfo">
-      <div>
-        <div style="font-size:12px;color:#444">Opponent</div>
-        <div id="opponentCrowns">Crowns: 0</div>
-      </div>
-      <div class="cardDock" id="cardDock"></div>
-      <div>
-        <button id="restartBtn">Restart</button>
-      </div>
+    <div id="timer">02:00</div>
+    <div class="crownBox">
+      <span id="opponentCrowns">0</span> <span class="crown">👑</span>
     </div>
   </div>
+
+  <div id="elixirPanel">
+    <div class="elixirBar"><div class="elixirFill" id="elixirFill"></div></div>
+    <div id="elixirCount">5</div>
+  </div>
+
+  <div id="cardDock"></div>
+
+  <button id="restart">Restart Match</button>
 </div>
 
 <script>
-/* Mini Royale - single-file browser game
-   - Click a card then click your side of the arena to place.
-   - AI opponent plays automatically.
-   - Towers and units have simple targeting and combat.
-*/
-
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
+// --- GAME LOGIC (simplified from previous version, focus on visuals) ---
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 const W = canvas.width, H = canvas.height;
 
-let state = {
-  timeLeft: 120, // seconds
-  running: true,
-  lastTick: performance.now(),
-  player:{elixir:5,crowns:0},
-  opponent:{elixir:5,crowns:0},
-  units:[], // all units
-  towers:[],
-  projectiles:[],
-  selectedCard:null,
-  cardsDeck:[],
-  toastTimer:0
-};
-
-// Card definitions
 const CARD_DEFS = {
-  knight: {cost:3,hp:120,atk:25,range:20,speed:40,type:'melee',w:20,h:28,color:'#7b3'},
-  archer: {cost:3,hp:70,atk:18,range:120,speed:55,type:'ranged',w:16,h:24,color:'#39f',attackCooldown:1.2},
-  bomber: {cost:4,hp:80,atk:55,range:20,speed:36,type:'splash',radius:45,w:18,h:22,color:'#f59'},
+  knight: {cost:3,hp:120,atk:25,range:20,speed:40,type:'melee',color:'#7b3'},
+  archer: {cost:3,hp:70,atk:18,range:120,speed:55,type:'ranged',color:'#39f',attackCooldown:1.2},
+  bomber: {cost:4,hp:80,atk:55,range:20,speed:36,type:'splash',radius:45,color:'#f59'},
   fireball: {cost:4,type:'spell',radius:50,damage:80,color:'#ff8a65'}
 };
 
-// Utility
-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function dist(a,b){let dx=a.x-b.x,dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy)}
-
-// Setup towers: three per side (player bottom, opponent top)
-function resetGame(){
-  state.timeLeft = 120;
-  state.running = true;
-  state.player = {elixir:5,crowns:0};
-  state.opponent = {elixir:5,crowns:0};
-  state.units = [];
-  state.towers = [];
-  state.projectiles = [];
-  state.selectedCard = null;
-  prepareDeck();
-  // towers
-  const towerHP=400;
-  const positions = [
-    {x:220,y:420,side:'player',isKing:false},
-    {x:480,y:380,side:'player',isKing:true},
-    {x:740,y:420,side:'player',isKing:false},
-    {x:220,y:120,side:'opponent',isKing:false},
-    {x:480,y:160,side:'opponent',isKing:true},
-    {x:740,y:120,side:'opponent',isKing:false}
-  ];
-  for(const p of positions){
-    state.towers.push({
-      x:p.x,y:p.y,hp: towerHP * (p.isKing?1.5:1),
-      side:p.side,isKing:p.isKing,range:140,atk:20,atkTimer:0
-    });
-  }
+let state;
+function init(){
+  state = {
+    running:true,timeLeft:120,
+    player:{elixir:5,crowns:0},
+    opponent:{elixir:5,crowns:0},
+    units:[],towers:[],projectiles:[],
+    selected:null,toast:0,last:performance.now()
+  };
+  const tHP=400;
+  [
+    {x:220,y:420,side:'player'},{x:480,y:380,side:'player',king:true},{x:740,y:420,side:'player'},
+    {x:220,y:120,side:'opponent'},{x:480,y:160,side:'opponent',king:true},{x:740,y:120,side:'opponent'}
+  ].forEach(p=>{
+    state.towers.push({x:p.x,y:p.y,hp:p.king?tHP*1.5:tHP,side:p.side,king:p.king,range:140,atk:20,atkTimer:0});
+  });
+  setupUI();
 }
-
-function prepareDeck(){
-  // simple deck of 4 cards
-  state.cardsDeck = ['knight','archer','bomber','fireball'];
-  renderCardDock();
-}
-
-// UI helpers
-const elixirFill = document.getElementById('elixirFill');
-const elixirCount = document.getElementById('elixirCount');
-const playerCrowns = document.getElementById('playerCrowns');
-const opponentCrowns = document.getElementById('opponentCrowns');
-const timerEl = document.getElementById('timer');
-const statusEl = document.getElementById('status');
-const toast = document.getElementById('toast');
-
-function showToast(t){
-  toast.style.display='block'; toast.textContent=t;
-  state.toastTimer = 2.0;
-}
-
-document.getElementById('restartBtn').onclick = () => { resetGame(); showToast('Restarted'); };
-
-function renderCardDock(){
-  const dock = document.getElementById('cardDock');
-  dock.innerHTML='';
-  for(const id of state.cardsDeck){
-    const def = CARD_DEFS[id];
-    const el = document.createElement('div');
-    el.className='card';
-    el.dataset.card=id;
-    el.innerHTML = `<div style="font-size:13px">${id}</div><div style="font-size:12px">Cost ${def.cost}</div>`;
-    el.onclick = ()=> {
-      if(state.selectedCard === id){ state.selectedCard = null; el.style.outline=''; }
-      else { state.selectedCard = id; highlightSelected(); }
-      showSelection();
+function setupUI(){
+  const dock=document.getElementById("cardDock");
+  dock.innerHTML="";
+  Object.keys(CARD_DEFS).forEach(id=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<div>${id}</div><div class="cost">${CARD_DEFS[id].cost}</div>`;
+    card.onclick=()=>{
+      state.selected = (state.selected===id)?null:id;
+      document.querySelectorAll(".card").forEach(c=>c.classList.remove("active"));
+      if(state.selected) card.classList.add("active");
     };
-    dock.appendChild(el);
-  }
-  highlightSelected();
-}
-function highlightSelected(){
-  document.querySelectorAll('.card').forEach(x=>{
-    x.style.outline = (x.dataset.card === state.selectedCard)?'3px solid rgba(0,0,0,.12)':'';
+    dock.appendChild(card);
   });
 }
-function showSelection(){ /* no-op for now */ }
-
-// Placement: click canvas to place selected card (player side only)
-canvas.addEventListener('click', (e)=>{
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
-  const x = (e.clientX-rect.left)*scaleX;
-  const y = (e.clientY-rect.top)*scaleY;
-  if(!state.selectedCard) return;
-  const def = CARD_DEFS[state.selectedCard];
-  // player must place on lower half
-  if(y < H/2) { showToast('Place only on your side (bottom)'); return; }
-  // cost
-  if(state.player.elixir < def.cost) { showToast('Not enough elixir'); return; }
-  // spawn spell or unit
-  if(def.type === 'spell'){
-    state.player.elixir -= def.cost;
-    state.projectiles.push({x,y,r:def.radius,damage:def.damage,life:0.6,owner:'player',color:def.color});
-  } else {
-    state.player.elixir -= def.cost;
-    state.units.push({
-      id:Math.random().toString(36).slice(2,8),
-      x,y,hp:def.hp,atk:def.atk||0,range:def.range||20,speed:def.speed,w:def.w,h:def.h,color:def.color,side:'player',type:def.type,atkTimer:0,attackCooldown:def.attackCooldown||1.0
-    });
+canvas.addEventListener("click",e=>{
+  if(!state.selected) return;
+  const rect=canvas.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*canvas.width/rect.width;
+  const y=(e.clientY-rect.top)*canvas.height/rect.height;
+  if(y<H/2){showToast("Place on your side only");return;}
+  const def=CARD_DEFS[state.selected];
+  if(state.player.elixir<def.cost){showToast("Not enough elixir");return;}
+  if(def.type==="spell"){
+    state.projectiles.push({x,y,r:def.radius,damage:def.damage,life:0.5,owner:'player',color:def.color});
+  }else{
+    state.units.push({x,y,hp:def.hp,atk:def.atk,range:def.range,speed:def.speed,side:'player',color:def.color,atkTimer:0,cd:def.attackCooldown||1});
   }
-  state.selectedCard = null;
-  highlightSelected();
+  state.player.elixir-=def.cost;
+  state.selected=null;
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("active"));
 });
 
-// Game tick
+function showToast(msg){
+  const toast=document.getElementById("toast");
+  toast.textContent=msg;
+  toast.style.opacity=1;
+  clearTimeout(toast._hide);
+  toast._hide=setTimeout(()=>toast.style.opacity=0,1500);
+}
+
 function tick(dt){
   if(!state.running) return;
-  // time
-  state.timeLeft = Math.max(0, state.timeLeft - dt);
-  if(state.timeLeft <= 0) { finishMatch(); return; }
+  state.timeLeft-=dt;
+  state.player.elixir=Math.min(10,state.player.elixir+dt*0.7);
+  state.opponent.elixir=Math.min(10,state.opponent.elixir+dt*0.7);
 
-  // elixir regen (per second)
-  state.player.elixir = clamp(state.player.elixir + dt*0.5, 0, 10); // 0.5 per sec -> would be slow; increase to 1 per sec? but using dt*0.5 meaning +0.5/s. Let's use 1 per sec:
-  state.player.elixir = clamp(state.player.elixir + 0, 0, 10); // placeholder to avoid double-add
-  // We'll instead add regen in a timed accumulator:
-  if(!state._elixirAcc) state._elixirAcc = 0;
-  state._elixirAcc += dt;
-  while(state._elixirAcc >= 1.0){
-    state.player.elixir = clamp(state.player.elixir + 1, 0, 10);
-    state.opponent.elixir = clamp(state.opponent.elixir + 1, 0, 10);
-    state._elixirAcc -= 1.0;
+  // AI simple spawn
+  if(!state.ai) state.ai={t:0};
+  state.ai.t-=dt;
+  if(state.ai.t<=0){
+    const ids=Object.keys(CARD_DEFS);
+    const id=ids[Math.floor(Math.random()*ids.length)];
+    const def=CARD_DEFS[id];
+    if(def.cost<=state.opponent.elixir){
+      state.opponent.elixir-=def.cost;
+      if(def.type==='spell'){
+        const tx=220+Math.random()*500,ty=350+Math.random()*80;
+        state.projectiles.push({x:tx,y:ty,r:def.radius,damage:def.damage,life:0.5,owner:'opponent',color:def.color});
+      }else{
+        const x=120+Math.random()*(W-240),y=80+Math.random()*60;
+        state.units.push({x,y,hp:def.hp,atk:def.atk,range:def.range,speed:def.speed,side:'opponent',color:def.color,atkTimer:0,cd:def.attackCooldown||1});
+      }
+    }
+    state.ai.t=1+Math.random()*1.5;
   }
 
-  // AI behaviour: simple random plays toward player's side
-  aiBehaviour(dt);
-
-  // units: movement and combat
-  updateUnits(dt);
-
-  // towers attack
-  updateTowers(dt);
-
-  // projectiles life
-  state.projectiles = state.projectiles.filter(p=>{
-    p.life -= dt;
-    return p.life > 0;
+  // simple combat
+  state.units.forEach(u=>{
+    u.atkTimer-=dt;
+    const enemies=state.units.filter(e=>e.side!==u.side);
+    let t=enemies[0];
+    if(t){
+      const dx=t.x-u.x,dy=t.y-u.y,d=Math.hypot(dx,dy);
+      if(d<(u.range||20)){
+        if(u.atkTimer<=0){t.hp-=u.atk;u.atkTimer=u.cd;}
+      }else{
+        u.x+=dx/d*u.speed*dt*(u.side==='player'?1:-1);
+        u.y+=dy/d*u.speed*dt*(u.side==='player'?1:-1);
+      }
+    }
   });
+  state.units=state.units.filter(u=>u.hp>0);
 
-  // resolve projectile hits immediately as area effect
+  // spells
   state.projectiles.forEach(p=>{
-    // damage units/towers within radius on hit (apply once)
-    // We'll apply and then set life to 0
-    state.units.forEach(u=>{
-      if(dist(u,p) <= p.r + Math.max(u.w,u.h)/2){
-        u.hp -= p.damage;
-      }
-    });
-    state.towers.forEach(t=>{
-      if(dist(t,p) <= p.r + 10) t.hp -= p.damage;
-    });
-    p.life = 0;
+    p.life-=dt;
+    if(p.life<=0){
+      state.units.forEach(u=>{
+        if(u.side!==(p.owner) && Math.hypot(u.x-p.x,u.y-p.y)<p.r) u.hp-=p.damage;
+      });
+    }
   });
-
-  // clean dead units & towers
-  let removedTowers = [];
-  state.units = state.units.filter(u=>u.hp>0);
-  state.towers = state.towers.filter(t=>{
-    if(t.hp <= 0){
-      removedTowers.push(t);
-      return false;
-    }
-    return true;
-  });
-  // if a tower died, award crown if king or side
-  removedTowers.forEach(t=>{
-    if(t.side === 'opponent') state.player.crowns += (t.isKing?3:1);
-    else state.opponent.crowns += (t.isKing?3:1);
-    playerCrowns.textContent = `Crowns: ${state.player.crowns}`;
-    opponentCrowns.textContent = `Crowns: ${state.opponent.crowns}`;
-    showToast(`${t.side === 'opponent' ? 'You' : 'Opponent'} destroyed a ${t.isKing? 'King ' : ''}tower!`);
-  });
-
-  // check win by king tower elimination
-  if(state.towers.filter(t=>t.isKing && t.side === 'opponent').length === 0){
-    endMatch('win');
-  } else if(state.towers.filter(t=>t.isKing && t.side === 'player').length === 0){
-    endMatch('lose');
-  }
-
-  // update UI
-  elixirFill.style.width = `${(state.player.elixir/10)*100}%`;
-  elixirCount.textContent = Math.floor(state.player.elixir);
-  timerEl.textContent = formatTime(Math.ceil(state.timeLeft));
-  playerCrowns.textContent = `Crowns: ${state.player.crowns}`;
-  opponentCrowns.textContent = `Crowns: ${state.opponent.crowns}`;
-
-  // toast fade
-  if(state.toastTimer > 0){
-    state.toastTimer = Math.max(0, state.toastTimer - dt);
-    if(state.toastTimer === 0) toast.style.display='none';
-  }
+  state.projectiles=state.projectiles.filter(p=>p.life>0);
+  updateUI();
 }
 
-// AI: very simple - choose a playable card randomly every 1.2-2.5s if elixir enough
-if(!state._ai) state._ai = {timer:0};
-function aiBehaviour(dt){
-  state._ai.timer -= dt;
-  if(state._ai.timer <= 0){
-    // pick a random card that AI has elixir for
-    const playable = state.cardsDeck.filter(id => CARD_DEFS[id].cost <= state.opponent.elixir);
-    if(playable.length > 0){
-      const id = playable[Math.floor(Math.random()*playable.length)];
-      const def = CARD_DEFS[id];
-      if(def.type === 'spell'){
-        // target random bottom tower of player
-        const targetTowers = state.towers.filter(t=>t.side==='player');
-        const t = targetTowers[Math.floor(Math.random()*targetTowers.length)];
-        state.projectiles.push({x:t.x,y:t.y,r:def.radius,damage:def.damage,life:0.6,owner:'opponent',color:def.color});
-        state.opponent.elixir -= def.cost;
-      } else {
-        // spawn on opponent side (top)
-        const spawnX = 120 + Math.random()*(W-240);
-        const spawnY = 80 + Math.random()*60;
-        state.units.push({
-          id:Math.random().toString(36).slice(2,8),
-          x:spawnX,y:spawnY,hp:def.hp,atk:def.atk||0,range:def.range||20,speed:def.speed,w:def.w,h:def.h,color:def.color,side:'opponent',type:def.type,atkTimer:0,attackCooldown:def.attackCooldown||1.0
-        });
-        state.opponent.elixir -= def.cost;
-      }
-    }
-    state._ai.timer = 0.9 + Math.random()*1.6;
-  }
+function updateUI(){
+  document.getElementById("elixirFill").style.width=`${(state.player.elixir/10)*100}%`;
+  document.getElementById("elixirCount").textContent=Math.floor(state.player.elixir);
+  document.getElementById("playerCrowns").textContent=state.player.crowns;
+  document.getElementById("opponentCrowns").textContent=state.opponent.crowns;
+  const m=Math.floor(state.timeLeft/60),s=Math.floor(state.timeLeft%60);
+  document.getElementById("timer").textContent=`${m}:${s.toString().padStart(2,'0')}`;
 }
 
-// Units behaviour
-function updateUnits(dt){
-  // for each unit find target (closest enemy unit in range else nearest enemy tower)
-  for(const u of state.units){
-    u.atkTimer -= dt;
-    // find enemy units
-    const enemies = state.units.filter(o=>o.side !== u.side);
-    let target = null;
-    // check units in attack range first
-    let inRangeUnit = enemies.find(e => dist(u,e) <= (u.range || 20) + Math.max(e.w,e.h)/2);
-    if(inRangeUnit){
-      target = inRangeUnit;
-    } else {
-      // else target nearest opponent tower
-      const towers = state.towers.filter(t=>t.side !== u.side);
-      if(towers.length) target = towers.reduce((a,b)=> (dist(u,a) < dist(u,b)?a:b) );
-    }
-
-    if(target){
-      const d = dist(u,target);
-      if(d <= (u.range || 20) + (target.w||10)/2 + 6){
-        // attack
-        if(u.atkTimer <= 0){
-          // deal damage
-          target.hp -= u.atk || 0;
-          u.atkTimer = u.attackCooldown || 1.0;
-        }
-      } else {
-        // move toward target
-        const dx = (target.x - u.x), dy = (target.y - u.y);
-        const mag = Math.sqrt(dx*dx+dy*dy) || 1;
-        u.x += (dx/mag) * u.speed * dt;
-        u.y += (dy/mag) * u.speed * dt;
-      }
-    } else {
-      // no target: move forward
-      u.y += (u.side==='player')? -u.speed*dt : u.speed*dt;
-    }
-  }
-}
-
-// Tower attack logic
-function updateTowers(dt){
-  for(const t of state.towers){
-    t.atkTimer -= dt;
-    if(t.atkTimer <= 0){
-      // find nearest enemy unit within range
-      const enemies = state.units.filter(u=>u.side !== t.side);
-      if(enemies.length){
-        const target = enemies.reduce((a,b)=> (dist(t,a) < dist(t,b)?a:b));
-        if(dist(t,target) <= t.range + Math.max(target.w,target.h)/2){
-          target.hp -= t.atk;
-          t.atkTimer = 1.0;
-        }
-      }
-    }
-  }
-}
-
-// Rendering
 function render(){
-  // clear
   ctx.clearRect(0,0,W,H);
-  // arena lanes and river
-  ctx.fillStyle = '#d6f6ff';
-  ctx.fillRect(0, H*0.25-10, W, H*0.5+20);
-
-  // arena center line
-  ctx.strokeStyle = '#ffffff88';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([6,8]);
-  ctx.beginPath(); ctx.moveTo(0,H/2); ctx.lineTo(W,H/2); ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.fillStyle="#b5eaff";
+  ctx.fillRect(0,H*0.25-10,W,H*0.5+20);
+  ctx.strokeStyle="#ffffff99";
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
 
   // towers
-  for(const t of state.towers){
-    ctx.save();
-    ctx.translate(t.x,t.y);
-    ctx.fillStyle = (t.side==='player')? 'rgba(59,130,246,0.95)' : 'rgba(239,68,68,0.95)';
-    ctx.beginPath();
-    ctx.rect(-22,-26,44,52);
-    ctx.fill();
-    // HP bar
-    ctx.fillStyle = '#00000055';
-    ctx.fillRect(-30,32,60,6);
-    ctx.fillStyle = '#66ff99';
-    const maxHp = (t.isKing?600:400) * (t.side==='player'?1:1); // approx
-    ctx.fillRect(-30,32,60 * clamp(t.hp/maxHp,0,1),6);
-    // crown marker if king
-    if(t.isKing){
-      ctx.fillStyle = '#ffd700';
-      ctx.beginPath(); ctx.moveTo(-10,-25); ctx.lineTo(0,-35); ctx.lineTo(10,-25); ctx.fill();
-    }
-    ctx.restore();
-  }
+  state.towers.forEach(t=>{
+    ctx.fillStyle=t.side==='player'? 'rgba(59,130,246,0.9)':'rgba(239,68,68,0.9)';
+    ctx.fillRect(t.x-20,t.y-20,40,40);
+    if(t.king){ctx.fillStyle='#ffd700';ctx.beginPath();ctx.moveTo(t.x-8,t.y-20);ctx.lineTo(t.x,t.y-30);ctx.lineTo(t.x+8,t.y-20);ctx.fill();}
+  });
 
   // units
-  for(const u of state.units){
-    ctx.save();
-    ctx.translate(u.x,u.y);
-    ctx.fillStyle = u.color;
-    ctx.beginPath();
-    ctx.ellipse(0,0,u.w,u.h,0,0,Math.PI*2);
-    ctx.fill();
-    // hp bar
-    ctx.fillStyle = '#00000055';
-    ctx.fillRect(-u.w-6, u.h+6, u.w*2+12,6);
-    ctx.fillStyle = '#76ffb3';
-    ctx.fillRect(-u.w-6, u.h+6, (u.w*2+12) * clamp(u.hp / (CARD_DEFS[u.type]?.hp || 100),0,1),6);
-    ctx.restore();
-  }
+  state.units.forEach(u=>{
+    ctx.fillStyle=u.color;
+    ctx.beginPath();ctx.arc(u.x,u.y,10,0,Math.PI*2);ctx.fill();
+  });
 
-  // projectiles (spells)
-  for(const p of state.projectiles){
-    ctx.save();
-    ctx.globalAlpha = Math.max(0.25, p.life/0.6);
-    ctx.fillStyle = p.color || '#ffb';
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-    ctx.restore();
-  }
-
-  // basic HUD hints
-  ctx.fillStyle = '#00000066';
-  ctx.font = '14px sans-serif';
-  ctx.fillText('Click a card then click your side (bottom) to place. AI plays automatically.',12,H-8);
+  // projectiles
+  state.projectiles.forEach(p=>{
+    ctx.globalAlpha=Math.max(0.3,p.life/0.5);
+    ctx.fillStyle=p.color;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  });
 }
 
-// game loop
-function loop(now){
-  const dt = Math.min(0.05, (now - state.lastTick)/1000);
-  state.lastTick = now;
-  tick(dt);
-  render();
+function loop(t){
+  const dt=Math.min(0.05,(t-state.last)/1000);
+  state.last=t;
+  tick(dt);render();
   requestAnimationFrame(loop);
 }
 
-function formatTime(s){
-  const m = Math.floor(s/60), sec = s%60;
-  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-}
-
-function finishMatch(){
-  // decide by crowns
-  state.running = false;
-  if(state.player.crowns > state.opponent.crowns) endMatch('win');
-  else if(state.player.crowns < state.opponent.crowns) endMatch('lose');
-  else endMatch('draw');
-}
-
-function endMatch(result){
-  state.running = false;
-  if(result === 'win') { statusEl.textContent = 'You win!'; showToast('Victory!'); }
-  else if(result === 'lose') { statusEl.textContent = 'You lose...'; showToast('Defeat'); }
-  else { statusEl.textContent = "Draw"; showToast('Draw'); }
-}
-
-// start
-resetGame();
-state.lastTick = performance.now();
+document.getElementById("restart").onclick=()=>init();
+init();
 requestAnimationFrame(loop);
 </script>
 </body>
