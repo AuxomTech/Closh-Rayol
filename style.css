@@ -1,1 +1,95 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(to top, #3b2f74, #1e1a3a);
+  font-family: 'Poppins', sans-serif;
+  color: white;
+  overflow: hidden;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header {
+  text-align: center;
+  padding: 1em;
+}
+
+.elixir-bar {
+  width: 300px;
+  height: 20px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  margin: 10px auto;
+  overflow: hidden;
+}
+
+.elixir-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #8a2be2, #da70d6);
+  transition: width 0.3s ease-in-out;
+}
+
+#arena {
+  width: 90%;
+  height: 60vh;
+  background: url('assets/arena.png') center/cover no-repeat;
+  border: 3px solid #fff4;
+  border-radius: 20px;
+  position: relative;
+}
+
+.tower {
+  width: 80px;
+  height: 120px;
+  background: url('assets/tower.png') center/contain no-repeat;
+  position: absolute;
+  bottom: 20px;
+}
+
+.left { left: 15%; }
+.right { right: 15%; }
+
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1em;
+  background: rgba(255,255,255,0.05);
+  border-top: 2px solid #fff3;
+}
+
+.card-deck {
+  display: flex;
+  gap: 10px;
+}
+
+.card {
+  width: 80px;
+  height: 100px;
+  background: #222;
+  border-radius: 10px;
+  border: 2px solid #fff2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: scale(1.1);
+  background: #333;
+}
 
